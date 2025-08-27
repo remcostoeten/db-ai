@@ -1,10 +1,16 @@
 import { createFileRoute } from "@tanstack/solid-router";
 import { createSignal, For, Show } from "solid-js";
 import { Plus, Database, Settings, Trash2, TestTube, Eye, EyeOff, Loader2 } from "lucide-solid";
-import { orpc } from "@/utils/orpc";
-import { useQuery, useMutation } from "@tanstack/solid-query";
 import { useAuthGuard } from "@/lib/route-guards";
 import { ComponentErrorBoundary } from "@/components/error-boundary";
+import { 
+	useConnections, 
+	useCreateConnection, 
+	useUpdateConnection, 
+	useDeleteConnection, 
+	useTestConnection, 
+	useToggleConnectionActive 
+} from "@/lib/orpc-hooks";
 
 export const Route = createFileRoute("/connections")({
 	component: ConnectionsRoute,
@@ -16,45 +22,13 @@ function ConnectionsRoute() {
 	const [showCreateForm, setShowCreateForm] = createSignal(false);
 	const [editingConnection, setEditingConnection] = createSignal<string | null>(null);
 
-	const connections = useQuery(() => orpc.connection.getAll.queryOptions());
-
-	const createMutation = useMutation(() =>
-		orpc.connection.create.mutationOptions({
-			onSuccess: () => {
-				connections.refetch();
-				setShowCreateForm(false);
-			},
-		}),
-	);
-
-	const updateMutation = useMutation(() =>
-		orpc.connection.update.mutationOptions({
-			onSuccess: () => {
-				connections.refetch();
-				setEditingConnection(null);
-			},
-		}),
-	);
-
-	const deleteMutation = useMutation(() =>
-		orpc.connection.delete.mutationOptions({
-			onSuccess: () => {
-				connections.refetch();
-			},
-		}),
-	);
-
-	const testMutation = useMutation(() =>
-		orpc.connection.testConnection.mutationOptions(),
-	);
-
-	const toggleActiveMutation = useMutation(() =>
-		orpc.connection.toggleActive.mutationOptions({
-			onSuccess: () => {
-				connections.refetch();
-			},
-		}),
-	);
+	// Use standardized hooks
+	const connections = useConnections();
+	const createConnection = useCreateConnection();
+	const updateConnection = useUpdateConnection();
+	const deleteConnection = useDeleteConnection();
+	const testConnection = useTestConnection();
+	const toggleConnectionActive = useToggleConnectionActive();
 
 	// Show loading state while checking auth
 	if (session().isPending) {
@@ -84,14 +58,17 @@ function ConnectionsRoute() {
 
 			<Show when={showCreateForm()}>
 				<ConnectionForm
-					onSubmit={(data) => createMutation.mutate(data)}
+					onSubmit={(data) => {
+						createConnection().createConnection(data);
+						setShowCreateForm(false);
+					}}
 					onCancel={() => setShowCreateForm(false)}
-					isLoading={createMutation.isPending}
+					isLoading={createConnection().isLoading}
 				/>
 			</Show>
 
 			<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-				<For each={connections.data}>
+				<For each={connections().connections}>
 					{(connection) => (
 						<div class="bg-white rounded-lg shadow-md border border-gray-200 p-6">
 							<div class="flex items-start justify-between mb-4">
@@ -107,11 +84,12 @@ function ConnectionsRoute() {
 								</div>
 								<div class="flex items-center gap-2">
 									<button
-										onclick={() => toggleActiveMutation.mutate({ 
+										onclick={() => toggleConnectionActive().toggleActive({ 
 											id: connection.id, 
 											isActive: connection.isActive !== "true" 
 										})}
-										class="text-gray-400 hover:text-gray-600 transition-colors"
+										disabled={toggleConnectionActive().isLoading}
+										class="text-gray-400 hover:text-gray-600 transition-colors disabled:opacity-50"
 										title={connection.isActive === "true" ? "Deactivate" : "Activate"}
 									>
 										<Show when={connection.isActive === "true"} fallback={<EyeOff size={16} />}>
@@ -127,10 +105,11 @@ function ConnectionsRoute() {
 									<button
 										onclick={() => {
 											if (confirm("Are you sure you want to delete this connection?")) {
-												deleteMutation.mutate({ id: connection.id });
+												deleteConnection().deleteConnection({ id: connection.id });
 											}
 										}}
-										class="text-red-400 hover:text-red-600 transition-colors"
+										disabled={deleteConnection().isLoading}
+										class="text-red-400 hover:text-red-600 transition-colors disabled:opacity-50"
 									>
 										<Trash2 size={16} />
 									</button>
@@ -147,8 +126,8 @@ function ConnectionsRoute() {
 									<span>{connection.database || "N/A"}</span>
 								</div>
 								<button
-									onclick={() => testMutation.mutate(connection as any)}
-									disabled={testMutation.isPending}
+									onclick={() => testConnection().testConnection(connection as any)}
+									disabled={testConnection().isLoading}
 									class="bg-gray-100 hover:bg-gray-200 text-gray-700 px-3 py-1 rounded text-sm flex items-center gap-1 transition-colors disabled:opacity-50"
 								>
 									<TestTube size={14} />
@@ -156,13 +135,13 @@ function ConnectionsRoute() {
 								</button>
 							</div>
 
-							<Show when={testMutation.data && testMutation.variables === connection}>
+							<Show when={testConnection().data && testConnection().variables === connection}>
 								<div class={`mt-3 p-2 rounded text-sm ${
-									testMutation.data.success 
+									testConnection().data.success 
 										? "bg-green-50 text-green-700 border border-green-200" 
 										: "bg-red-50 text-red-700 border border-red-200"
 								}`}>
-									{testMutation.data.success ? "✓ Connection successful" : `✗ ${testMutation.data.error || "Connection failed"}`}
+									{testConnection().data.success ? "✓ Connection successful" : `✗ ${testConnection().data.error || "Connection failed"}`}
 								</div>
 							</Show>
 
@@ -170,9 +149,12 @@ function ConnectionsRoute() {
 								<div class="mt-4 pt-4 border-t border-gray-200">
 									<ConnectionForm
 										connection={connection}
-										onSubmit={(data) => updateMutation.mutate({ ...data, id: connection.id })}
+										onSubmit={(data) => {
+											updateConnection().updateConnection({ ...data, id: connection.id });
+											setEditingConnection(null);
+										}}
 										onCancel={() => setEditingConnection(null)}
-										isLoading={updateMutation.isPending}
+										isLoading={updateConnection().isLoading}
 									/>
 								</div>
 							</Show>
@@ -181,15 +163,15 @@ function ConnectionsRoute() {
 				</For>
 			</div>
 
-			<Show when={connections.isLoading}>
+			<Show when={connections().isLoading}>
 				<div class="flex justify-center py-8">
-					<div class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+					<Loader2 class="w-8 h-8 animate-spin text-blue-600" />
 				</div>
 			</Show>
 
-			<Show when={connections.error}>
+			<Show when={connections().error}>
 				<div class="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded">
-					Error loading connections: {connections.error?.message}
+					Error loading connections: {connections().error?.message}
 				</div>
 			</Show>
 		</div>

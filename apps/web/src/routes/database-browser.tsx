@@ -15,10 +15,17 @@ import {
 	FileText,
 	Loader2
 } from "lucide-solid";
-import { orpc } from "@/utils/orpc";
-import { useQuery, useMutation } from "@tanstack/solid-query";
 import { useAuthGuard } from "@/lib/route-guards";
 import { ComponentErrorBoundary } from "@/components/error-boundary";
+import { 
+	useConnections, 
+	useDatabases, 
+	useTables, 
+	useColumns,
+	useSyncDatabases,
+	useSyncTables,
+	useSyncColumns
+} from "@/lib/orpc-hooks";
 
 export const Route = createFileRoute("/database-browser")({
 	component: DatabaseBrowserRoute,
@@ -33,57 +40,26 @@ function DatabaseBrowserRoute() {
 	const [expandedDatabases, setExpandedDatabases] = createSignal<Set<string>>(new Set());
 	const [expandedTables, setExpandedTables] = createSignal<Set<string>>(new Set());
 
-	const connections = useQuery(() => orpc.connection.getAll.queryOptions());
-
-	const databases = useQuery(() => ({
-		...orpc.database.getByConnectionId.queryOptions({ connectionId: selectedConnection()! }),
-		enabled: !!selectedConnection(),
-	}));
-
-	const tables = useQuery(() => ({
-		...orpc.table.getByDatabaseId.queryOptions({ databaseId: selectedDatabase()! }),
-		enabled: !!selectedDatabase(),
-	}));
-
-	const columns = useQuery(() => ({
-		...orpc.column.getByTableId.queryOptions({ tableId: selectedTable()! }),
-		enabled: !!selectedTable(),
-	}));
-
-	const syncDatabasesMutation = useMutation(() =>
-		orpc.database.syncFromConnection.mutationOptions({
-			onSuccess: () => {
-				databases.refetch();
-			},
-		}),
-	);
-
-	const syncTablesMutation = useMutation(() =>
-		orpc.table.syncFromDatabase.mutationOptions({
-			onSuccess: () => {
-				tables.refetch();
-			},
-		}),
-	);
-
-	const syncColumnsMutation = useMutation(() =>
-		orpc.column.syncFromTable.mutationOptions({
-			onSuccess: () => {
-				columns.refetch();
-			},
-		}),
-	);
+	// Use standardized hooks
+	const connections = useConnections();
+	const databases = useDatabases(selectedConnection() || "");
+	const tables = useTables(selectedDatabase() || "");
+	const columns = useColumns(selectedTable() || "");
+	
+	const syncDatabases = useSyncDatabases();
+	const syncTables = useSyncTables();
+	const syncColumns = useSyncColumns();
 
 	const selectedConnectionData = createMemo(() => 
-		connections.data?.find(conn => conn.id === selectedConnection())
+		connections().connections.find(conn => conn.id === selectedConnection())
 	);
 
 	const selectedDatabaseData = createMemo(() =>
-		databases.data?.find(db => db.id === selectedDatabase())
+		databases().databases.find(db => db.id === selectedDatabase())
 	);
 
 	const selectedTableData = createMemo(() =>
-		tables.data?.find(table => table.id === selectedTable())
+		tables().tables.find(table => table.id === selectedTable())
 	);
 
 	const toggleDatabaseExpansion = (databaseId: string) => {
@@ -156,7 +132,7 @@ function DatabaseBrowserRoute() {
 								class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
 							>
 								<option value="">Select a connection...</option>
-								<For each={connections.data?.filter(conn => conn.isActive === "true")}>
+								<For each={connections().activeConnections}>
 									{(connection) => (
 										<option value={connection.id}>
 											{connection.name} ({connection.type})
@@ -172,17 +148,17 @@ function DatabaseBrowserRoute() {
 								<div class="flex items-center justify-between">
 									<h3 class="text-sm font-medium text-gray-700">Databases</h3>
 									<button
-										onclick={() => syncDatabasesMutation.mutate({ connectionId: selectedConnection()! })}
-										disabled={syncDatabasesMutation.isPending}
+										onclick={() => syncDatabases().syncDatabases({ connectionId: selectedConnection()! })}
+										disabled={syncDatabases().isLoading}
 										class="text-blue-600 hover:text-blue-700 disabled:opacity-50"
 										title="Sync databases"
 									>
-										<RefreshCw size={14} class={syncDatabasesMutation.isPending ? "animate-spin" : ""} />
+										<RefreshCw size={14} class={syncDatabases().isLoading ? "animate-spin" : ""} />
 									</button>
 								</div>
 
 								<div class="max-h-96 overflow-y-auto">
-									<For each={databases.data}>
+									<For each={databases().databases}>
 										{(database) => (
 											<div class="border-l-2 border-gray-200 ml-2 pl-2">
 												<div class="flex items-center gap-2 py-1">
@@ -207,18 +183,18 @@ function DatabaseBrowserRoute() {
 														<div class="flex items-center justify-between">
 															<span class="text-xs text-gray-500">Tables</span>
 															<button
-																onclick={() => syncTablesMutation.mutate({ 
+																onclick={() => syncTables().syncTables({ 
 																	databaseId: database.id,
 																	databaseName: database.name 
 																})}
-																disabled={syncTablesMutation.isPending}
+																disabled={syncTables().isLoading}
 																class="text-blue-600 hover:text-blue-700 disabled:opacity-50"
 																title="Sync tables"
 															>
-																<RefreshCw size={12} class={syncTablesMutation.isPending ? "animate-spin" : ""} />
+																<RefreshCw size={12} class={syncTables().isLoading ? "animate-spin" : ""} />
 															</button>
 														</div>
-														<For each={tables.data?.filter(table => table.databaseId === database.id)}>
+														<For each={tables().tables.filter(table => table.databaseId === database.id)}>
 															{(table) => (
 																<div class="border-l-2 border-gray-200 ml-2 pl-2">
 																	<button
@@ -243,18 +219,18 @@ function DatabaseBrowserRoute() {
 																			<div class="flex items-center justify-between">
 																				<span class="text-xs text-gray-400">Columns</span>
 																				<button
-																					onclick={() => syncColumnsMutation.mutate({ 
+																					onclick={() => syncColumns().syncColumns({ 
 																						tableId: table.id,
 																						schemaName: table.schema 
 																					})}
-																					disabled={syncColumnsMutation.isPending}
+																					disabled={syncColumns().isLoading}
 																					class="text-blue-600 hover:text-blue-700 disabled:opacity-50"
 																					title="Sync columns"
 																				>
-																					<RefreshCw size={10} class={syncColumnsMutation.isPending ? "animate-spin" : ""} />
+																					<RefreshCw size={10} class={syncColumns().isLoading ? "animate-spin" : ""} />
 																				</button>
 																			</div>
-																			<For each={columns.data?.filter(col => col.tableId === table.id)}>
+																			<For each={columns().columns.filter(col => col.tableId === table.id)}>
 																				{(column) => (
 																					<div class="flex items-center gap-2 text-xs text-gray-500 ml-2">
 																						{getColumnIcon(column)}
@@ -328,7 +304,7 @@ function DatabaseBrowserRoute() {
 										</div>
 										<div>
 											<label class="block text-sm font-medium text-gray-500">Tables</label>
-											<p class="text-gray-900">{tables.data?.filter(t => t.databaseId === selectedDatabase()).length || 0}</p>
+											<p class="text-gray-900">{tables().tables.filter(t => t.databaseId === selectedDatabase()).length || 0}</p>
 										</div>
 									</div>
 								</div>
@@ -365,7 +341,7 @@ function DatabaseBrowserRoute() {
 								<div>
 									<h3 class="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
 										<Columns size={20} />
-										Columns ({columns.data?.filter(col => col.tableId === selectedTable()).length || 0})
+										Columns ({columns().columns.filter(col => col.tableId === selectedTable()).length || 0})
 									</h3>
 
 									<div class="overflow-x-auto">
@@ -380,7 +356,7 @@ function DatabaseBrowserRoute() {
 												</tr>
 											</thead>
 											<tbody class="bg-white divide-y divide-gray-200">
-												<For each={columns.data?.filter(col => col.tableId === selectedTable()).sort((a, b) => 
+												<For each={columns().columns.filter(col => col.tableId === selectedTable()).sort((a, b) => 
 													parseInt(a.ordinalPosition) - parseInt(b.ordinalPosition)
 												)}>
 													{(column) => (
