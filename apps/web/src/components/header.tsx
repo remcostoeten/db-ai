@@ -7,6 +7,8 @@ export default function Header() {
 		{ to: "/", label: "Home" },
 		{ to: "/dashboard", label: "Dashboard" },
 		{ to: "/todos", label: "Todos" },
+		{ to: "/connections", label: "Connections" },
+		{ to: "/database-browser", label: "Database Browser" },
 	];
 
 	return (
