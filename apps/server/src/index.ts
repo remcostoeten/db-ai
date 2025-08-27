@@ -6,8 +6,10 @@ import { auth } from "./lib/auth";
 import { Hono } from "hono";
 import { cors } from "hono/cors";
 import { logger } from "hono/logger";
+import { WebRTCSignalingServer } from "./lib/websocket";
 
 const app = new Hono();
+const signalingServer = new WebRTCSignalingServer();
 
 app.use(logger());
 app.use(
@@ -38,6 +40,19 @@ app.use("/rpc/*", async (c, next) => {
 
 app.get("/", (c) => {
 	return c.text("OK");
+});
+
+// WebSocket upgrade handler
+app.get("/ws", (c) => {
+	const upgradeHeader = c.req.header("upgrade");
+	if (upgradeHeader !== "websocket") {
+		return c.text("Expected websocket", 400);
+	}
+
+	const [client, server] = new WebSocketPair();
+	signalingServer.handleWebSocket(server);
+	
+	return new Response(null, { status: 101, webSocket: client });
 });
 
 export default app;
