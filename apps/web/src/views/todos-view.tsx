@@ -1,6 +1,7 @@
 import { Loader2, Trash2 } from 'lucide-solid';
 import { createSignal, For, Show, createResource } from 'solid-js';
 import { client } from '@/utils/orpc';
+import type { TTodo } from '@/types/todo';
 
 
 
@@ -10,7 +11,10 @@ export default function TodosView() {
 	const [isToggling, setIsToggling] = createSignal<number | null>(null);
 	const [isDeleting, setIsDeleting] = createSignal<number | null>(null);
 
-	const [todos, { refetch }] = createResource(() => client.todo.getAll());
+	const [todos, { refetch }] = createResource(async () => {
+		const result = await client.todo.getAll();
+		return result as TTodo[];
+	});
 
 	async function handleAddTodo(e: Event) {
 		e.preventDefault();

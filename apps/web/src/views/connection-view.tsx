@@ -5,7 +5,10 @@ import type { TConnection } from '@/types/connection';
 import { client } from '@/utils/orpc';
 
 export default function ConnectionView() {
-	const [connections, { refetch }] = createResource(() => client.connection.getAll());
+	const [connections, { refetch }] = createResource(async () => {
+		const result = await client.connection.getAll();
+		return result as TConnection[];
+	});
 	const [open, setOpen] = createSignal(false);
 	const [editing, setEditing] = createSignal<TConnection | null>(null);
 	
