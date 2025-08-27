@@ -1,56 +1,67 @@
 import { Loader2, Trash2 } from 'lucide-solid';
-import { createSignal, For, Show, createResource } from 'solid-js';
-import { client } from '@/utils/orpc';
-
-
+import { createSignal, For, Show } from 'solid-js';
+import { useOrpcQuery, queries } from '@/hooks/use-orpc-query';
+import { useOrpcMutation, mutations } from '@/hooks/use-orpc-mutation';
+import { handleApiError } from '@/utils/error-handling';
 
 export default function TodosView() {
 	const [newTodoText, setNewTodoText] = createSignal('');
-	const [isCreating, setIsCreating] = createSignal(false);
 	const [isToggling, setIsToggling] = createSignal<number | null>(null);
 	const [isDeleting, setIsDeleting] = createSignal<number | null>(null);
 
-	const [todos, { refetch }] = createResource(() => client.todo.getAll());
+	const [todos, { refetch }] = useOrpcQuery(
+		queries.todos.getAll,
+		{
+			onError: (error) => handleApiError(error, 'Load Todos')
+		}
+	);
+
+	const createMutation = useOrpcMutation(mutations.todos.create, {
+		onSuccess: () => {
+			setNewTodoText('');
+			refetch();
+		},
+		onError: (error) => handleApiError(error, 'Create Todo')
+	});
+
+	const toggleMutation = useOrpcMutation(mutations.todos.toggle, {
+		onSuccess: () => {
+			setIsToggling(null);
+			refetch();
+		},
+		onError: (error) => {
+			setIsToggling(null);
+			handleApiError(error, 'Toggle Todo');
+		}
+	});
+
+	const deleteMutation = useOrpcMutation(mutations.todos.delete, {
+		onSuccess: () => {
+			setIsDeleting(null);
+			refetch();
+		},
+		onError: (error) => {
+			setIsDeleting(null);
+			handleApiError(error, 'Delete Todo');
+		}
+	});
 
 	async function handleAddTodo(e: Event) {
 		e.preventDefault();
 		const text = newTodoText().trim();
 		if (!text) return;
 
-		setIsCreating(true);
-		try {
-			await client.todo.create({ text });
-			setNewTodoText('');
-			await refetch();
-		} catch (error) {
-			console.error('Failed to create todo:', error);
-		} finally {
-			setIsCreating(false);
-		}
+		await createMutation.mutate({ text });
 	}
 
 	async function handleToggleTodo(id: number, completed: boolean) {
 		setIsToggling(id);
-		try {
-			await client.todo.toggle({ id, completed: !completed });
-			await refetch();
-		} catch (error) {
-			console.error('Failed to toggle todo:', error);
-		} finally {
-			setIsToggling(null);
-		}
+		await toggleMutation.mutate({ id, completed: !completed });
 	}
 
 	async function handleDeleteTodo(id: number) {
 		setIsDeleting(id);
-		try {
-			await client.todo.delete({ id });
-			await refetch();
-		} catch (error) {
-			console.error('Failed to delete todo:', error);
-		} finally {
-			setIsDeleting(null);
-		}
+		await deleteMutation.mutate({ id });
 	}
 
 	return (
@@ -67,7 +78,7 @@ export default function TodosView() {
 					>
 						<input
 							class="w-full rounded-md border p-2 text-sm"
-							disabled={isCreating()}
+							disabled={createMutation.isLoading()}
 							onInput={(e) =>
 								setNewTodoText(e.currentTarget.value)
 							}
@@ -78,14 +89,14 @@ export default function TodosView() {
 						<button
 							class="rounded-md bg-blue-600 px-4 py-2 text-sm text-white disabled:opacity-50"
 							disabled={
-								isCreating() ||
+								createMutation.isLoading() ||
 								!newTodoText().trim()
 							}
 							type="submit"
 						>
 							<Show
 								fallback="Add"
-								when={isCreating()}
+								when={createMutation.isLoading()}
 							>
 								<Loader2 class="h-4 w-4 animate-spin" />
 							</Show>
