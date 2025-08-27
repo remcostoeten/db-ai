@@ -12,16 +12,21 @@ import {
 	Hash,
 	Type,
 	Calendar,
-	FileText
+	FileText,
+	Loader2
 } from "lucide-solid";
 import { orpc } from "@/utils/orpc";
 import { useQuery, useMutation } from "@tanstack/solid-query";
+import { useAuthGuard } from "@/lib/route-guards";
+import { ComponentErrorBoundary } from "@/components/error-boundary";
 
 export const Route = createFileRoute("/database-browser")({
 	component: DatabaseBrowserRoute,
 });
 
 function DatabaseBrowserRoute() {
+	const navigate = Route.useNavigate();
+	const session = useAuthGuard(navigate);
 	const [selectedConnection, setSelectedConnection] = createSignal<string | null>(null);
 	const [selectedDatabase, setSelectedDatabase] = createSignal<string | null>(null);
 	const [selectedTable, setSelectedTable] = createSignal<string | null>(null);
@@ -110,8 +115,18 @@ function DatabaseBrowserRoute() {
 		return <Type size={14} class="text-gray-600" />;
 	};
 
+	// Show loading state while checking auth
+	if (session().isPending) {
+		return (
+			<div class="flex justify-center items-center min-h-[400px]">
+				<Loader2 class="w-8 h-8 animate-spin text-blue-600" />
+			</div>
+		);
+	}
+
 	return (
-		<div class="container mx-auto p-6">
+		<ComponentErrorBoundary name="Database Browser">
+			<div class="container mx-auto p-6">
 			<div class="mb-6">
 				<h1 class="text-3xl font-bold text-gray-900">Database Browser</h1>
 				<p class="text-gray-600 mt-2">Explore your database structure and schema</p>
@@ -423,5 +438,6 @@ function DatabaseBrowserRoute() {
 				</div>
 			</div>
 		</div>
+		</ComponentErrorBoundary>
 	);
 }

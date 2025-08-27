@@ -1,14 +1,18 @@
 import { createFileRoute } from "@tanstack/solid-router";
-import { Loader2, Trash2 } from "lucide-solid";
+import { Loader2, Trash2, Plus } from "lucide-solid";
 import { createSignal, For, Show } from "solid-js";
 import { orpc } from "@/utils/orpc";
 import { useQuery, useMutation } from "@tanstack/solid-query";
+import { useAuthGuard } from "@/lib/route-guards";
+import { ComponentErrorBoundary } from "@/components/error-boundary";
 
 export const Route = createFileRoute("/todos")({
 	component: TodosRoute,
 });
 
 function TodosRoute() {
+	const navigate = Route.useNavigate();
+	const session = useAuthGuard(navigate);
 	const [newTodoText, setNewTodoText] = createSignal("");
 
 	const todos = useQuery(() => orpc.todo.getAll.queryOptions());
@@ -52,6 +56,15 @@ function TodosRoute() {
 	const handleDeleteTodo = (id: number) => {
 		deleteMutation.mutate({ id });
 	};
+
+	// Show loading state while checking auth
+	if (session().isPending) {
+		return (
+			<div class="flex justify-center items-center min-h-[400px]">
+				<Loader2 class="w-8 h-8 animate-spin text-blue-600" />
+			</div>
+		);
+	}
 
 	return (
 		<div class="mx-auto w-full max-w-md py-10">

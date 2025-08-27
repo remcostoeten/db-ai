@@ -1,14 +1,18 @@
 import { createFileRoute } from "@tanstack/solid-router";
 import { createSignal, For, Show } from "solid-js";
-import { Plus, Database, Settings, Trash2, TestTube, Eye, EyeOff } from "lucide-solid";
+import { Plus, Database, Settings, Trash2, TestTube, Eye, EyeOff, Loader2 } from "lucide-solid";
 import { orpc } from "@/utils/orpc";
 import { useQuery, useMutation } from "@tanstack/solid-query";
+import { useAuthGuard } from "@/lib/route-guards";
+import { ComponentErrorBoundary } from "@/components/error-boundary";
 
 export const Route = createFileRoute("/connections")({
 	component: ConnectionsRoute,
 });
 
 function ConnectionsRoute() {
+	const navigate = Route.useNavigate();
+	const session = useAuthGuard(navigate);
 	const [showCreateForm, setShowCreateForm] = createSignal(false);
 	const [editingConnection, setEditingConnection] = createSignal<string | null>(null);
 
@@ -52,8 +56,18 @@ function ConnectionsRoute() {
 		}),
 	);
 
+	// Show loading state while checking auth
+	if (session().isPending) {
+		return (
+			<div class="flex justify-center items-center min-h-[400px]">
+				<Loader2 class="w-8 h-8 animate-spin text-blue-600" />
+			</div>
+		);
+	}
+
 	return (
-		<div class="container mx-auto p-6">
+		<ComponentErrorBoundary name="Connections">
+			<div class="container mx-auto p-6">
 			<div class="flex justify-between items-center mb-6">
 				<div>
 					<h1 class="text-3xl font-bold text-gray-900">Database Connections</h1>
@@ -179,6 +193,7 @@ function ConnectionsRoute() {
 				</div>
 			</Show>
 		</div>
+		</ComponentErrorBoundary>
 	);
 }
 
