@@ -1,4 +1,4 @@
-import { Loader2 } from "lucide-solid";
+import { Loader2 } from 'lucide-solid';
 
 export default function Loader() {
 	return (

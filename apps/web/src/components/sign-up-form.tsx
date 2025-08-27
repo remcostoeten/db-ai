@@ -1,23 +1,21 @@
-import { authClient } from "@/lib/auth-client";
-import { createForm } from "@tanstack/solid-form";
-import { useNavigate } from "@tanstack/solid-router";
-import z from "zod";
-import { For } from "solid-js";
+import { useNavigate } from '@solidjs/router';
+import { createForm } from '@tanstack/solid-form';
+import { For } from 'solid-js';
+import { SignUpSchema } from '@/features/auth/validations/auth';
+import { authClient } from '@/core/utilities/auth-client';
 
 export default function SignUpForm({
 	onSwitchToSignIn,
 }: {
 	onSwitchToSignIn: () => void;
 }) {
-	const navigate = useNavigate({
-		from: "/",
-	});
+	const navigate = useNavigate();
 
 	const form = createForm(() => ({
 		defaultValues: {
-			email: "",
-			password: "",
-			name: "",
+			email: '',
+			password: '',
+			name: '',
 		},
 		onSubmit: async ({ value }) => {
 			await authClient.signUp.email(
@@ -28,37 +26,31 @@ export default function SignUpForm({
 				},
 				{
 					onSuccess: () => {
-						navigate({
-							to: "/dashboard",
-						});
-						console.log("Sign up successful");
+						navigate('/dashboard');
+						console.log('Sign up successful');
 					},
 					onError: (error) => {
 						console.error(error.error.message);
 					},
-				},
+				}
 			);
 		},
 		validators: {
-			onSubmit: z.object({
-				name: z.string().min(2, "Name must be at least 2 characters"),
-				email: z.email("Invalid email address"),
-				password: z.string().min(8, "Password must be at least 8 characters"),
-			}),
+			onSubmit: SignUpSchema,
 		},
 	}));
 
 	return (
-		<div class="mx-auto w-full mt-10 max-w-md p-6">
-			<h1 class="mb-6 text-center text-3xl font-bold">Create Account</h1>
+		<div class="mx-auto mt-10 w-full max-w-md p-6">
+			<h1 class="mb-6 text-center font-bold text-3xl">Create Account</h1>
 
 			<form
+				class="space-y-4"
 				onSubmit={(e) => {
 					e.preventDefault();
 					e.stopPropagation();
 					form.handleSubmit();
 				}}
-				class="space-y-4"
 			>
 				<div>
 					<form.Field name="name">
@@ -66,16 +58,22 @@ export default function SignUpForm({
 							<div class="space-y-2">
 								<label for={field().name}>Name</label>
 								<input
+									class="w-full rounded border p-2"
 									id={field().name}
 									name={field().name}
-									value={field().state.value}
 									onBlur={field().handleBlur}
-									onInput={(e) => field().handleChange(e.currentTarget.value)}
-									class="w-full rounded border p-2"
+									onInput={(e) =>
+										field().handleChange(
+											e.currentTarget.value
+										)
+									}
+									value={field().state.value}
 								/>
 								<For each={field().state.meta.errors}>
 									{(error) => (
-										<p class="text-sm text-red-600">{error?.message}</p>
+										<p class="text-red-600 text-sm">
+											{error?.message}
+										</p>
 									)}
 								</For>
 							</div>
@@ -89,17 +87,23 @@ export default function SignUpForm({
 							<div class="space-y-2">
 								<label for={field().name}>Email</label>
 								<input
+									class="w-full rounded border p-2"
 									id={field().name}
 									name={field().name}
+									onBlur={field().handleBlur}
+									onInput={(e) =>
+										field().handleChange(
+											e.currentTarget.value
+										)
+									}
 									type="email"
 									value={field().state.value}
-									onBlur={field().handleBlur}
-									onInput={(e) => field().handleChange(e.currentTarget.value)}
-									class="w-full rounded border p-2"
 								/>
 								<For each={field().state.meta.errors}>
 									{(error) => (
-										<p class="text-sm text-red-600">{error?.message}</p>
+										<p class="text-red-600 text-sm">
+											{error?.message}
+										</p>
 									)}
 								</For>
 							</div>
@@ -113,17 +117,23 @@ export default function SignUpForm({
 							<div class="space-y-2">
 								<label for={field().name}>Password</label>
 								<input
+									class="w-full rounded border p-2"
 									id={field().name}
 									name={field().name}
+									onBlur={field().handleBlur}
+									onInput={(e) =>
+										field().handleChange(
+											e.currentTarget.value
+										)
+									}
 									type="password"
 									value={field().state.value}
-									onBlur={field().handleBlur}
-									onInput={(e) => field().handleChange(e.currentTarget.value)}
-									class="w-full rounded border p-2"
 								/>
 								<For each={field().state.meta.errors}>
 									{(error) => (
-										<p class="text-sm text-red-600">{error?.message}</p>
+										<p class="text-red-600 text-sm">
+											{error?.message}
+										</p>
 									)}
 								</For>
 							</div>
@@ -134,11 +144,13 @@ export default function SignUpForm({
 				<form.Subscribe>
 					{(state) => (
 						<button
-							type="submit"
 							class="w-full rounded bg-indigo-600 p-2 text-white hover:bg-indigo-700 disabled:opacity-50"
-							disabled={!state().canSubmit || state().isSubmitting}
+							disabled={
+								!state().canSubmit || state().isSubmitting
+							}
+							type="submit"
 						>
-							{state().isSubmitting ? "Submitting..." : "Sign Up"}
+							{state().isSubmitting ? 'Submitting...' : 'Sign Up'}
 						</button>
 					)}
 				</form.Subscribe>
@@ -146,9 +158,9 @@ export default function SignUpForm({
 
 			<div class="mt-4 text-center">
 				<button
-					type="button"
+					class="text-indigo-600 text-sm hover:text-indigo-800 hover:underline"
 					onClick={onSwitchToSignIn}
-					class="text-sm text-indigo-600 hover:text-indigo-800 hover:underline"
+					type="button"
 				>
 					Already have an account? Sign In
 				</button>

@@ -1,12 +1,20 @@
 {
-	"name": "my-better-t-app-server",
+	"name": "db-palace-server",
 	"main": "src/index.ts",
 	"compatibility_date": "2025-06-15",
 	"compatibility_flags": ["nodejs_compat"],
 	"vars": {
-		"NODE_ENV": "production"
-		// Add public environment variables here
-		// Example: "CORS_ORIGIN": "https://your-domain.com"
+		"NODE_ENV": "production",
+		"ADMIN_EMAIL": "your-admin@example.com",
+		"CORS_ORIGIN": "https://db-palace.pages.dev"
+	},
+	"env": {
+		"production": {
+			"vars": {
+				"NODE_ENV": "production",
+				"CORS_ORIGIN": "https://db-palace.pages.dev"
+			}
+		}
 	}
 	// For sensitive data, use:
 	// wrangler secret put SECRET_NAME

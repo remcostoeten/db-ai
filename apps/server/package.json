@@ -7,12 +7,13 @@
 		"check-types": "tsc -b",
 		"compile": "bun build --compile --minify --sourcemap --bytecode ./src/index.ts --outfile server",
 		"db:push": "drizzle-kit push",
-		"db:studio": "drizzle-kit studio",
+		"db:studio": "drizzle-kit studio --port=5000",
 		"db:generate": "drizzle-kit generate",
 		"db:migrate": "drizzle-kit migrate",
 		"dev": "wrangler dev --port=3000",
-		"start": "wrangler dev",
+		"start": "wrangler dev --port=3000",
 		"deploy": "wrangler deploy",
+		"deploy:staging": "wrangler deploy --env staging",
 		"cf-typegen": "wrangler types --env-interface CloudflareBindings"
 	},
 	"dependencies": {

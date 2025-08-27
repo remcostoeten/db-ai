@@ -1,0 +1,8 @@
+{
+  "name": "@db-studio/shared",
+  "version": "1.0.0",
+  "type": "module",
+  "exports": {
+    "./api/*": "./api/*.ts"
+  }
+}

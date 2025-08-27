@@ -1,38 +1,32 @@
-import { authClient } from "@/lib/auth-client";
-import { orpc } from "@/utils/orpc";
-import { useQuery } from "@tanstack/solid-query";
-import { createFileRoute } from "@tanstack/solid-router";
-import { createEffect, Show } from "solid-js";
+import { createResource } from 'solid-js';
+import { authClient } from '@/core/utilities/auth-client';
+import { client } from '@/utils/orpc';
+import { ProtectedRoute } from '@/components/protected-route';
+import DashboardView from '@/views/dashboard-view';
 
-export const Route = createFileRoute("/dashboard")({
-	component: RouteComponent,
-});
-
-function RouteComponent() {
+export default function DashboardRoute() {
 	const session = authClient.useSession();
-	const navigate = Route.useNavigate();
 
-	const privateData = useQuery(() => orpc.privateData.queryOptions());
-
-	createEffect(() => {
-		if (!session().data && !session().isPending) {
-			navigate({
-				to: "/login",
-			});
+	const [userRole] = createResource(
+		() => session()?.data?.user?.id,
+		async (userId) => {
+			if (!userId) return null;
+			try {
+				return await client.user.getRole();
+			} catch (error) {
+				console.error('Failed to fetch user role:', error);
+				return null;
+			}
 		}
-	});
+	);
+
+	// You can still access user data inside the protected component
+	console.log('Dashboard - User role (from API):', userRole());
+	console.log('Dashboard - Full user (from useSession):', session()?.data?.user);
 
 	return (
-		<div>
-			<Show when={session().isPending}>
-				<div>Loading...</div>
-			</Show>
-
-			<Show when={!session().isPending && session().data}>
-				<h1>Dashboard</h1>
-				<p>Welcome {session().data?.user.name}</p>
-				<p>privateData: {privateData.data?.message}</p>
-			</Show>
-		</div>
+		<ProtectedRoute>
+			<DashboardView />
+		</ProtectedRoute>
 	);
 }

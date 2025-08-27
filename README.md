@@ -1,4 +1,4 @@
-# my-better-t-app
+# db-palace
 
 This project was created with [Better-T-Stack](https://github.com/AmanVarshney01/create-better-t-stack), a modern TypeScript stack that combines SolidJS, Hono, ORPC, and more.
 
@@ -59,7 +59,7 @@ The API is running at [http://localhost:3000](http://localhost:3000).
 ## Project Structure
 
 ```
-my-better-t-app/
+db-palace/
 ├── apps/
 │   ├── web/         # Frontend application (SolidJS)
 │   └── server/      # Backend API (Hono, ORPC)

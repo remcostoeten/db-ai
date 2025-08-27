@@ -1,23 +1,10 @@
-import SignInForm from "@/components/sign-in-form";
-import SignUpForm from "@/components/sign-up-form";
-import { createFileRoute } from "@tanstack/solid-router";
-import { createSignal, Match, Switch } from "solid-js";
+import { GuestOnlyRoute } from '@/components/protected-route';
+import LoginView from '@/views/login-view';
 
-export const Route = createFileRoute("/login")({
-	component: RouteComponent,
-});
-
-function RouteComponent() {
-	const [showSignIn, setShowSignIn] = createSignal(false);
-
+export default function LoginRoute() {
 	return (
-		<Switch>
-			<Match when={showSignIn()}>
-				<SignInForm onSwitchToSignUp={() => setShowSignIn(false)} />
-			</Match>
-			<Match when={!showSignIn()}>
-				<SignUpForm onSwitchToSignIn={() => setShowSignIn(true)} />
-			</Match>
-		</Switch>
+		<GuestOnlyRoute>
+			<LoginView />
+		</GuestOnlyRoute>
 	);
 }

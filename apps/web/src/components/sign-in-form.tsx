@@ -1,22 +1,22 @@
-import { authClient } from "@/lib/auth-client";
-import { createForm } from "@tanstack/solid-form";
-import { useNavigate } from "@tanstack/solid-router";
-import z from "zod";
-import { For } from "solid-js";
+import { createForm } from '@tanstack/solid-form';
+import { useNavigate } from '@solidjs/router';
+import { For } from 'solid-js';
+import { SignInSchema } from '@/features/auth/validations/auth';
+import { authClient } from '@/core/utilities/auth-client';
 
-export default function SignInForm({
-	onSwitchToSignUp,
-}: {
+const MIN_PASSWORD_LENGTH = 8;
+
+type TProps = {
 	onSwitchToSignUp: () => void;
-}) {
-	const navigate = useNavigate({
-		from: "/",
-	});
+};
+
+export default function SignInForm(props: TProps) {
+	const navigate = useNavigate();
 
 	const form = createForm(() => ({
 		defaultValues: {
-			email: "",
-			password: "",
+			email: '',
+			password: '',
 		},
 		onSubmit: async ({ value }) => {
 			await authClient.signIn.email(
@@ -26,36 +26,31 @@ export default function SignInForm({
 				},
 				{
 					onSuccess: () => {
-						navigate({
-							to: "/dashboard",
-						});
-						console.log("Sign in successful");
+						navigate('/dashboard');
+						console.log('Sign in successful');
 					},
 					onError: (error) => {
 						console.error(error.error.message);
 					},
-				},
+				}
 			);
 		},
 		validators: {
-			onSubmit: z.object({
-				email: z.email("Invalid email address"),
-				password: z.string().min(8, "Password must be at least 8 characters"),
-			}),
+			onSubmit: SignInSchema,
 		},
 	}));
 
 	return (
-		<div class="mx-auto w-full mt-10 max-w-md p-6">
-			<h1 class="mb-6 text-center text-3xl font-bold">Welcome Back</h1>
+		<div class="mx-auto mt-10 w-full max-w-md p-6">
+			<h1 class="mb-6 text-center font-bold text-3xl">Welcome Back</h1>
 
 			<form
+				class="space-y-4"
 				onSubmit={(e) => {
 					e.preventDefault();
 					e.stopPropagation();
 					form.handleSubmit();
 				}}
-				class="space-y-4"
 			>
 				<div>
 					<form.Field name="email">
@@ -63,17 +58,23 @@ export default function SignInForm({
 							<div class="space-y-2">
 								<label for={field().name}>Email</label>
 								<input
+									class="w-full rounded border p-2"
 									id={field().name}
 									name={field().name}
+									onBlur={field().handleBlur}
+									onInput={(e) =>
+										field().handleChange(
+											e.currentTarget.value
+										)
+									}
 									type="email"
 									value={field().state.value}
-									onBlur={field().handleBlur}
-									onInput={(e) => field().handleChange(e.currentTarget.value)}
-									class="w-full rounded border p-2"
 								/>
 								<For each={field().state.meta.errors}>
 									{(error) => (
-										<p class="text-sm text-red-600">{error?.message}</p>
+										<p class="text-red-600 text-sm">
+											{error?.message}
+										</p>
 									)}
 								</For>
 							</div>
@@ -87,17 +88,23 @@ export default function SignInForm({
 							<div class="space-y-2">
 								<label for={field().name}>Password</label>
 								<input
+									class="w-full rounded border p-2"
 									id={field().name}
 									name={field().name}
+									onBlur={field().handleBlur}
+									onInput={(e) =>
+										field().handleChange(
+											e.currentTarget.value
+										)
+									}
 									type="password"
 									value={field().state.value}
-									onBlur={field().handleBlur}
-									onInput={(e) => field().handleChange(e.currentTarget.value)}
-									class="w-full rounded border p-2"
 								/>
 								<For each={field().state.meta.errors}>
 									{(error) => (
-										<p class="text-sm text-red-600">{error?.message}</p>
+										<p class="text-red-600 text-sm">
+											{error?.message}
+										</p>
 									)}
 								</For>
 							</div>
@@ -108,11 +115,13 @@ export default function SignInForm({
 				<form.Subscribe>
 					{(state) => (
 						<button
-							type="submit"
 							class="w-full rounded bg-indigo-600 p-2 text-white hover:bg-indigo-700 disabled:opacity-50"
-							disabled={!state().canSubmit || state().isSubmitting}
+							disabled={
+								!state().canSubmit || state().isSubmitting
+							}
+							type="submit"
 						>
-							{state().isSubmitting ? "Submitting..." : "Sign In"}
+							{state().isSubmitting ? 'Submitting...' : 'Sign In'}
 						</button>
 					)}
 				</form.Subscribe>
@@ -120,9 +129,9 @@ export default function SignInForm({
 
 			<div class="mt-4 text-center">
 				<button
+					class="text-indigo-600 text-sm hover:text-indigo-800 hover:underline"
+					onClick={props.onSwitchToSignUp}
 					type="button"
-					onClick={onSwitchToSignUp}
-					class="text-sm text-indigo-600 hover:text-indigo-800 hover:underline"
 				>
 					Need an account? Sign Up
 				</button>

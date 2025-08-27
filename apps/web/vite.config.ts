@@ -1,20 +1,17 @@
-import { cloudflare } from "@cloudflare/vite-plugin";
-import { defineConfig } from "vite";
-import { tanstackRouter } from "@tanstack/router-plugin/vite";
-import solidPlugin from "vite-plugin-solid";
-import tailwindcss from "@tailwindcss/vite";
-import path from "node:path";
+import path from 'node:path';
+import { cloudflare } from '@cloudflare/vite-plugin';
+import tailwindcss from '@tailwindcss/vite';
+import { defineConfig } from 'vite';
+import solidPlugin from 'vite-plugin-solid';
 
 export default defineConfig({
-	plugins: [
-		tanstackRouter({ target: "solid", autoCodeSplitting: true }),
-		solidPlugin(),
-		tailwindcss(),
-		cloudflare(),
-	],
+	plugins: [solidPlugin(), tailwindcss(), cloudflare()],
 	resolve: {
 		alias: {
-			"@": path.resolve(__dirname, "./src"),
+			'@': path.resolve(__dirname, './src'),
+			'@shared': path.resolve(__dirname, '../../shared'),
+			'utilities': path.resolve(__dirname, './src/shared/utilities/index.ts'),
+			'ui': path.resolve(__dirname, './src/shared/components/ui/index.ts'),
 		},
 	},
 });

@@ -5,8 +5,29 @@
     {
       "idx": 0,
       "version": "7",
-      "when": 1756290722522,
-      "tag": "0000_early_butterfly",
+      "when": 1756208586266,
+      "tag": "0000_glorious_skrulls",
+      "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1756213437630,
+      "tag": "0001_brainy_aaron_stack",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1756247579781,
+      "tag": "0002_talented_black_panther",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1756249063742,
+      "tag": "0003_far_bloodstrike",
       "breakpoints": true
     }
   ]
