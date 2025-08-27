@@ -19,18 +19,18 @@ export default function UserMenu() {
 				</Link>
 			</Show>
 
-			<Show when={!session().isPending && session().data}>
+			<Show when={!session().isPending && session().data?.user}>
 				<button
 					type="button"
 					class="inline-block border rounded px-4  text-sm"
 					onClick={() => setIsMenuOpen(!isMenuOpen())}
 				>
-					{session().data?.user.name}
+					{session().data?.user?.name || session().data?.user?.email || 'User'}
 				</button>
 
 				<Show when={isMenuOpen()}>
 					<div class="absolute right-0 mt-2 w-56 rounded p-1 shadow-sm">
-						<div class="px-4  text-sm">{session().data?.user.email}</div>
+						<div class="px-4  text-sm">{session().data?.user?.email}</div>
 						<button
 							type="button"
 							class="mt-1 w-full border rounded px-4  text-center text-sm"

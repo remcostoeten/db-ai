@@ -1,8 +1,8 @@
 import { createFileRoute, Link } from "@tanstack/solid-router";
-import { createEffect, Show, For } from "solid-js";
+import { Show } from "solid-js";
 import { Database, Plus, Eye, Settings, Loader2 } from "lucide-solid";
 import { useAuthGuard } from "@/lib/route-guards";
-import { useConnections, usePrivateData } from "@/lib/orpc-hooks";
+import { useConnections } from "@/lib/orpc-hooks";
 import { ComponentErrorBoundary } from "@/components/error-boundary";
 
 export const Route = createFileRoute("/dashboard")({
@@ -13,8 +13,8 @@ function RouteComponent() {
 	const navigate = Route.useNavigate();
 	const session = useAuthGuard(navigate);
 
-	const privateData = usePrivateData();
-	const connections = useConnections();
+	// const privateData = usePrivateData(); // Temporarily disabled due to oRPC issue
+	// const connections = useConnections(); // Temporarily disabled due to oRPC issue
 
 	// Show loading state while checking auth
 	if (session().isPending) {
@@ -39,7 +39,7 @@ function RouteComponent() {
 						<div class="flex items-center justify-between">
 							<div>
 								<p class="text-sm font-medium text-gray-500">Total Connections</p>
-								<p class="text-2xl font-bold text-gray-900">{connections().totalConnections}</p>
+								<p class="text-2xl font-bold text-gray-900">0</p>
 							</div>
 							<Database class="h-8 w-8 text-blue-600" />
 						</div>
@@ -49,7 +49,7 @@ function RouteComponent() {
 						<div class="flex items-center justify-between">
 							<div>
 								<p class="text-sm font-medium text-gray-500">Active Connections</p>
-								<p class="text-2xl font-bold text-green-600">{connections().activeConnections.length}</p>
+								<p class="text-2xl font-bold text-green-600">0</p>
 							</div>
 							<Eye class="h-8 w-8 text-green-600" />
 						</div>
@@ -59,9 +59,7 @@ function RouteComponent() {
 						<div class="flex items-center justify-between">
 							<div>
 								<p class="text-sm font-medium text-gray-500">Database Types</p>
-								<p class="text-2xl font-bold text-purple-600">
-									{new Set(connections().connections.map(conn => conn.type)).size || 0}
-								</p>
+								<p class="text-2xl font-bold text-purple-600">0</p>
 							</div>
 							<Settings class="h-8 w-8 text-purple-600" />
 						</div>
@@ -81,68 +79,20 @@ function RouteComponent() {
 						</Link>
 					</div>
 
-					<Show when={connections().isLoading}>
-						<div class="flex justify-center py-4">
-							<Loader2 class="w-6 h-6 animate-spin text-blue-600" />
-						</div>
-					</Show>
+					<div class="text-center py-8 text-gray-500">
+						<Database size={48} class="mx-auto mb-4 text-gray-300" />
+						<p class="text-lg font-medium">No connections yet</p>
+						<p class="text-sm">Get started by creating your first database connection</p>
+						<Link 
+							to="/connections" 
+							class="mt-4 inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition-colors"
+						>
+							<Plus size={16} />
+							Create Connection
+						</Link>
+					</div>
 
-					<Show when={connections().isEmpty}>
-						<div class="text-center py-8 text-gray-500">
-							<Database size={48} class="mx-auto mb-4 text-gray-300" />
-							<p class="text-lg font-medium">No connections yet</p>
-							<p class="text-sm">Get started by creating your first database connection</p>
-							<Link 
-								to="/connections" 
-								class="mt-4 inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition-colors"
-							>
-								<Plus size={16} />
-								Create Connection
-							</Link>
-						</div>
-					</Show>
-
-					<Show when={!connections().isLoading && !connections().isEmpty}>
-						<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-							<For each={connections().connections.slice(0, 6)}>
-								{(connection) => (
-									<div class="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
-										<div class="flex items-center justify-between mb-3">
-											<div class="flex items-center gap-2">
-												<div
-													class="w-3 h-3 rounded-full"
-													style={{ "background-color": connection.color }}
-												/>
-												<h3 class="font-medium text-gray-900 truncate">{connection.name}</h3>
-											</div>
-											<span class={`text-xs px-2 py-1 rounded-full ${
-												connection.isActive === "true" 
-													? "bg-green-100 text-green-800" 
-													: "bg-gray-100 text-gray-800"
-											}`}>
-												{connection.isActive === "true" ? "Active" : "Inactive"}
-											</span>
-										</div>
-										<p class="text-sm text-gray-500 capitalize mb-2">{connection.type}</p>
-										<Show when={connection.description}>
-											<p class="text-xs text-gray-400 truncate">{connection.description}</p>
-										</Show>
-									</div>
-								)}
-							</For>
-						</div>
-
-						<Show when={connections().totalConnections > 6}>
-							<div class="mt-4 text-center">
-								<Link 
-									to="/connections" 
-									class="text-blue-600 hover:text-blue-700 font-medium"
-								>
-									View all {connections().totalConnections} connections →
-								</Link>
-							</div>
-						</Show>
-					</Show>
+					{/* Connections list temporarily disabled due to oRPC issue */}
 				</div>
 
 				{/* Quick Actions */}

@@ -11,7 +11,9 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as TodosRouteImport } from './routes/todos'
 import { Route as LoginRouteImport } from './routes/login'
+import { Route as DatabaseBrowserRouteImport } from './routes/database-browser'
 import { Route as DashboardRouteImport } from './routes/dashboard'
+import { Route as ConnectionsRouteImport } from './routes/connections'
 import { Route as IndexRouteImport } from './routes/index'
 
 const TodosRoute = TodosRouteImport.update({
@@ -24,9 +26,19 @@ const LoginRoute = LoginRouteImport.update({
   path: '/login',
   getParentRoute: () => rootRouteImport,
 } as any)
+const DatabaseBrowserRoute = DatabaseBrowserRouteImport.update({
+  id: '/database-browser',
+  path: '/database-browser',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const DashboardRoute = DashboardRouteImport.update({
   id: '/dashboard',
   path: '/dashboard',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ConnectionsRoute = ConnectionsRouteImport.update({
+  id: '/connections',
+  path: '/connections',
   getParentRoute: () => rootRouteImport,
 } as any)
 const IndexRoute = IndexRouteImport.update({
@@ -37,34 +49,61 @@ const IndexRoute = IndexRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/connections': typeof ConnectionsRoute
   '/dashboard': typeof DashboardRoute
+  '/database-browser': typeof DatabaseBrowserRoute
   '/login': typeof LoginRoute
   '/todos': typeof TodosRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/connections': typeof ConnectionsRoute
   '/dashboard': typeof DashboardRoute
+  '/database-browser': typeof DatabaseBrowserRoute
   '/login': typeof LoginRoute
   '/todos': typeof TodosRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/connections': typeof ConnectionsRoute
   '/dashboard': typeof DashboardRoute
+  '/database-browser': typeof DatabaseBrowserRoute
   '/login': typeof LoginRoute
   '/todos': typeof TodosRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/dashboard' | '/login' | '/todos'
+  fullPaths:
+    | '/'
+    | '/connections'
+    | '/dashboard'
+    | '/database-browser'
+    | '/login'
+    | '/todos'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/dashboard' | '/login' | '/todos'
-  id: '__root__' | '/' | '/dashboard' | '/login' | '/todos'
+  to:
+    | '/'
+    | '/connections'
+    | '/dashboard'
+    | '/database-browser'
+    | '/login'
+    | '/todos'
+  id:
+    | '__root__'
+    | '/'
+    | '/connections'
+    | '/dashboard'
+    | '/database-browser'
+    | '/login'
+    | '/todos'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  ConnectionsRoute: typeof ConnectionsRoute
   DashboardRoute: typeof DashboardRoute
+  DatabaseBrowserRoute: typeof DatabaseBrowserRoute
   LoginRoute: typeof LoginRoute
   TodosRoute: typeof TodosRoute
 }
@@ -85,11 +124,25 @@ declare module '@tanstack/solid-router' {
       preLoaderRoute: typeof LoginRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/database-browser': {
+      id: '/database-browser'
+      path: '/database-browser'
+      fullPath: '/database-browser'
+      preLoaderRoute: typeof DatabaseBrowserRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/dashboard': {
       id: '/dashboard'
       path: '/dashboard'
       fullPath: '/dashboard'
       preLoaderRoute: typeof DashboardRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/connections': {
+      id: '/connections'
+      path: '/connections'
+      fullPath: '/connections'
+      preLoaderRoute: typeof ConnectionsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/': {
@@ -104,7 +157,9 @@ declare module '@tanstack/solid-router' {
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  ConnectionsRoute: ConnectionsRoute,
   DashboardRoute: DashboardRoute,
+  DatabaseBrowserRoute: DatabaseBrowserRoute,
   LoginRoute: LoginRoute,
   TodosRoute: TodosRoute,
 }

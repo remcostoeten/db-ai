@@ -1,4 +1,4 @@
-import { createSignal, Show, JSX } from "solid-js";
+import { createSignal, Show, type JSX } from "solid-js";
 import { ErrorBoundary } from "solid-js";
 import { AlertCircle, RefreshCw } from "lucide-solid";
 

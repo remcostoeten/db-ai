@@ -269,10 +269,21 @@ export function useHealthCheck() {
 
 // Private data hook (example)
 export function usePrivateData() {
-	const query = orpc.privateData.useQuery();
-	
-	return createMemo(() => ({
-		...query,
-		privateData: query.data,
-	}));
+	try {
+		const query = orpc.privateData.useQuery();
+		
+		return createMemo(() => ({
+			...query,
+			privateData: query.data,
+		}));
+	} catch (error) {
+		console.error('Error in usePrivateData:', error);
+		return createMemo(() => ({
+			data: undefined,
+			isLoading: false,
+			isError: true,
+			error,
+			privateData: undefined,
+		}));
+	}
 }
